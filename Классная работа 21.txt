@@ -1,0 +1,69 @@
+
+
+
+
+
+
+
+
+
+
+--Вывести количество участков у каждого семейного врача--
+
+select fio_doct as Medic, count(area) as Area_number --count - функция для подсчитывания числа картежей--
+from Family_doctor
+group by fio_doct
+go
+
+select *
+from Family_doctor
+go
+
+
+
+--Вывести колличество наименований с каждой дозировкой--
+
+select dosage as Dozirovka, count(med_name) as Medicaments_number
+from Medicaments
+group by dosage
+go
+
+select *
+from Medicaments
+go
+
+
+
+--Вывести число пациентов в поликлинике--
+
+select count(*) as number_of_pacients  --* - означает, что подсчитываем все записи--
+from Patient 
+go
+
+
+select *
+from Patient 
+go
+
+
+
+--Вывести количество наименований медикоментов--
+
+select count(*) as number_of_medicaments  --* - означает, что подсчитываем все записи--
+from Medicaments 
+go
+
+
+
+
+
+--Вывесьти количество пациентов мужского и женского полла--
+
+select gender, count(*) as number_of_genders
+from Patient 
+group by gender
+go
+
+select *
+from Patient 
+go
