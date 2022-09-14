@@ -1,0 +1,136 @@
+create database Despanser
+go
+
+use Despanser
+go
+
+
+
+create type Adres from varchar(70)
+go
+
+create type FIO from varchar(50)
+go
+
+create type Telefon from char(12)
+go
+
+create table Med_inst(cod_MI smallint primary key,
+					  name_MI varchar(20),
+					  legal_adres Adres,
+					  Tel_numb Telefon,
+					  Stamp varchar(20))
+go
+
+create table Areas(Cod_area int primary key,
+				   Area varchar(70))
+go
+
+create table Family_doctor(Cod_fam_doctor int primary key,
+						   fio_doct FIO,
+						   Tel_munb Telefon,
+						   area int foreign key references Areas(Cod_area) not null,
+						   Stamp varchar(20))
+go
+
+
+
+create table Tratement(cod_trate int primary key,
+					   trat_name varchar(25),
+					   trat_method varchar(50),
+					   duration smallint)
+go
+
+create table Medicaments(cod_med int primary key,
+					     med_name varchar(20),
+						 purpose varchar(30),
+						 dosage smallint,
+						 instruction varchar(100))
+go
+
+create table Tratement_Medicaments(cod_trate int foreign key references Tratement(cod_trate) not null,
+								   cod_med int foreign key references Medicaments(cod_med) not null)
+go
+
+create table Speciallist(cod_spec int primary key,
+						 fio_spec FIO,
+						 post varchar(20),
+						 Stamp varchar(20),
+						 cod_MI smallint foreign key references Med_inst(cod_MI) not null)
+go
+
+create table Patient(cod_pac int primary key,
+					 fio_pac FIO,
+					 age smallint check (age>0 and age <150),
+					 gender char check(gender = 'M' or gender = 'F'),
+					 Birth_date date,
+					 pac_adres Adres,
+					 Cod_fam_doctor int foreign key references Family_doctor(Cod_fam_doctor) not null,
+					 pac_tel Telefon,
+					 Number_insurance_police int,
+					 Work varchar(20),
+					 IDNP varchar(13))
+go
+
+create table Diagnoza(cod_diagnoz int primary key,
+					  name_diagnoz varchar(30),
+					  cod_trate int foreign key references Tratement(cod_trate) not null)
+go
+
+create table Referral(cod_ref int primary key,
+					  cod_pac int foreign key references Patient(cod_pac) not null,
+					  cod_diagnoz int foreign key references Diagnoza(cod_diagnoz) not null,
+					  Cod_fam_doctor int foreign key references Family_doctor(Cod_fam_doctor) not null,
+					  cod_spec int foreign key references Speciallist(cod_spec) not null,
+					  vizit_date datetime,
+					  cod_MI smallint foreign key references Med_inst(cod_MI) not null)
+go
+
+create table Note(note_numb int primary key,
+				  cod_spec int foreign key references Speciallist(cod_spec) not null,
+				  cod_pac int foreign key references Patient(cod_pac) not null,
+				  cod_diagnoz int foreign key references Diagnoza(cod_diagnoz) not null,
+				  cod_MI smallint foreign key references Med_inst(cod_MI) not null)
+go
+
+create table Recept(recept_numb int primary key,
+					cod_pac int foreign key references Patient(cod_pac) not null,
+					cod_med int foreign key references Medicaments(cod_med) not null,
+					Dosage smallint,
+					trat_duration smallint default 30,
+					prescription_date date,
+					cod_MI smallint foreign key references Med_inst(cod_MI) not null,
+					cod_spec int foreign key references Speciallist(cod_spec) not null)
+go
+
+
+
+
+
+
+
+
+
+
+insert into Med_inst(cod_MI, name_MI, legal_adres, Tel_numb, Stamp)
+values (1001, 'Med Family', 'str.Sadovianu 7/5', '+37369982418', 'MedFamily'),
+	   (1002, 'Galaxia', 'str.Puskin 21/1', '+37367756224', 'Galaxia gr.')
+Go
+
+select * from Med_inst
+Go
+
+
+
+insert into Areas(Cod_area, Area)
+values (1, 'Dacia'),
+	   
+
+
+insert into Family_doctor(Cod_fam_doctor, fio_doct, Tel_munb, area, Stamp)
+values (2067, 'Burlakova Anna Sergei', '+37367766545', 'Dacia', 'Burlakova A.S.'),
+	   (2068, 'Fulger Elena Matvei', '+37368453213', 'Nicolae Milescu Spataru', 'Fulger A.M.'),
+	   (2069, 'Antonescu Anton Anton', '+37369999675', 'Sodoveanu', 'Antonescu A.A.'),
+	   (2070, 'Maskov Andrei Mihail', '+37367893421', 'Petru Zadnipru', 'Maskov A.M.'),
+	   (2071, 'Nastasiu Olgo Ivan', '+37368568258', 'Alecu Russo', 'Nastasiu O.I.')
+Go
