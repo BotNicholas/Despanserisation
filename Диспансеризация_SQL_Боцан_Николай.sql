@@ -1370,3 +1370,24 @@ insert into Reciept_view (recept_numb, fio_pac, age, gender, Birth_date, pac_adr
 
 delete from Reciept_view where recept_numb = 1111
 go
+
+
+
+
+--class work 14.9.22--
+
+declare @Carea varchar(70)
+go
+
+set @Carea = 'Dacia'
+go
+
+select *
+from Patient_Fam_doctor_view
+where area = @Carea
+Go
+
+
+select *
+from Patient_Fam_doctor_view
+go
