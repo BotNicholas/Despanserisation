@@ -1564,3 +1564,274 @@ where fio_doct = @Cfiodoct
 go	
 
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--домашняя работа 27.09.2022--
+
+/*создаваемые роли:
+	-пациент (patient_r)
+	-регистратор (registrator_r)
+	-врач (doctor_r)
+	-главврач (chief_doctor_r)
+	-администратор (administrator_r)
+
+
+
+
+
+
+	p.s.
+	для создания ролей использована стандартная процедура MSSQL sp_addrole
+	для предоставления прав - оператор Grant
+*/
+
+
+
+--пациент (чтение Patient_Referral_Spec_view(направление) и Full_registration_ticket_view(запись к врачу/специаллисту))--
+
+
+exec sp_addrole 'patient_r'
+go
+
+grant select 
+on Patient_Referral_Spec_view(cod_diagnoz, vizit_date, fio_spec, post, name_MI) --правильно ли такое ограничение на поля таблицы?--
+to patient_r
+go
+
+grant select
+on Full_registration_ticket_view
+to patient_r
+go
+
+
+--регистратор (регистратура) (запись в Registration_ticket, просмотр ФИО и кода специалистов (Speciallist(cod_spec, fio_spec))(<-?))--
+exec sp_addrole 'registrator_r'
+go
+
+grant insert
+on Registration_ticket
+to registrator_r
+go
+
+grant select
+on Speciallist(cod_spec, fio_spec)
+to registrator_r
+go
+
+
+
+
+
+--?--
+--врач (просмотр всей информации о своих пациентах и его диагнозах (<-?))--
+
+
+
+/* ? молно ли как-то использовать where?
+
+--для этого воспользуемся локальной переменной--
+declare @ICodDoct int;
+set @ICodDoct = 2067;
+go
+*/
+
+exec sp_addrole 'doctor_r'
+go
+
+grant select
+on Patient
+to doctor_r
+go
+
+grant select
+on Patient_Diagnoz_view
+to doctor_r
+go
+
+
+select *
+from Patient_Diagnoz_view
+go
+
+
+
+
+--главврач (просмотр информации о всех пациентах, их диагнозах, а также всех специалистов и семейных врачей (если его понадобится заместить (подменить)))--
+
+exec sp_addrole 'chief_doctor_r'
+go
+
+grant select
+on Patient
+to chief_doctor_r
+go
+
+grant select
+on Patient_Diagnoz_view
+to chief_doctor_r
+go
+
+grant select
+on Speciallist
+to chief_doctor_r
+go
+
+grant select
+on Family_doctor
+to chief_doctor_r
+go
+
+
+
+--?--
+--администратор (полный доступ ко всем таблицам)--
+
+exec sp_addrole 'administrator_r'
+go
+
+grant select, insert, update, delete, alter
+on Area_doctor
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Diagnoza
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Family_doctor
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Med_inst
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Medicaments
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Note
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Patient
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Recept
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Referral
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Registration_ticket
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Speciallist
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Tratement
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Tratement_Medicaments
+to administrator_r
+go
+
+
+--представления--
+
+grant select, insert, update, delete, alter
+on Diagnoza_Tratement_Medicament_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Diagnoza_Tratement_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Full_registration_ticket_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on inst_Spec_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Medicament_Tratement_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Patient_Diagnoz_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Patient_Referral_Spec_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Patient_Referral_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Patient_Ticket_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Reciept_Medicaments_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Tratement_diagnoza_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Tratement_medicaments_view
+to administrator_r
+go
+
+grant select, insert, update, delete, alter
+on Tratement_view
+to administrator_r
+go
+
+
