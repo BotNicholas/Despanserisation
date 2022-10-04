@@ -104,6 +104,12 @@ create table Recept(recept_numb int,
 go
 
 
+create table Registration_ticket(cod_pac int foreign key references Patient(cod_pac),
+								cod_spec int foreign key references Speciallist(cod_spec),
+								visit_date Datetime)
+go
+
+
 
 
 
@@ -329,6 +335,16 @@ Go
 
 
 
+
+
+
+insert into Registration_ticket(cod_pac, cod_spec, visit_date)
+values (10001, 2067, '2022-02-17 14:00'),
+	   (10002, 2069, '2022-02-17 14:30'),
+	   (10003, 10001, '2022-02-17 15:00'),
+	   (10004, 11004, '2022-02-17 15:30'),
+	   (10005, 2070, '2022-02-17 16:00')
+go
 
 
 
@@ -1397,6 +1413,29 @@ go
 
 
 
+
+
+
+
+
+
+
+--создадим представление "полный регистрационный талон"--
+create view Patient_Ticket_view as
+select fio_pac, cod_spec, visit_date
+from Patient inner join Registration_ticket on Patient.cod_pac = Registration_ticket.cod_pac
+go
+
+
+create view Full_registration_ticket_view as
+select fio_pac, fio_spec, post, visit_date
+from Patient_Ticket_view inner join Speciallist on Patient_Ticket_view.cod_spec = Speciallist.cod_spec
+go
+
+
+select *
+from Full_registration_ticket_view
+go
 
 
 
