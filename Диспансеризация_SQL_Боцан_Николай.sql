@@ -1,11 +1,11 @@
-﻿/*Čńďđŕâčňü ÁÄ č ńäĺëŕňü ďîë˙ ęîä íŕďđŕâëĺíč˙, đĺöĺďňŕ č âűďčńęč íĺ ęëţ÷ŕěč, ŕ îáű÷íűěč ďîë˙ěč, ňŕę ęŕę îíč ěîăóň ďîâňîđ˙ňüń˙!!!!!!!!*/
-
-create database Despanser
+﻿create database Despanser
 go
 
 use Despanser
 go
 
+
+--надо ли регистрация, если уже есть направление? По идее это два разных документа...--
 
 
 create type Adres from varchar(70)
@@ -15,6 +15,10 @@ create type FIO from varchar(50)
 go
 
 create type Telefon from char(12)
+go
+
+create table Area_doctor(id_area int primary key,
+						 area_name varchar(70))
 go
 
 create table Med_inst(cod_MI smallint primary key,
@@ -27,11 +31,9 @@ go
 create table Family_doctor(Cod_fam_doctor int primary key,
 						   fio_doct FIO,
 						   Tel_munb Telefon,
-						   area varchar(70),
+						   id_area int foreign key references Area_doctor(id_area) not null,
 						   Stamp varchar(20))
 go
-
-
 
 create table Tratement(cod_trate int primary key,
 					   trat_name varchar(25),
@@ -75,7 +77,7 @@ create table Diagnoza(cod_diagnoz int primary key,
 					  cod_trate int foreign key references Tratement(cod_trate) not null)
 go
 
-create table Referral(cod_ref int primary key,
+create table Referral(cod_ref int,
 					  cod_pac int foreign key references Patient(cod_pac) not null,
 					  cod_diagnoz int foreign key references Diagnoza(cod_diagnoz) not null,
 					  Cod_fam_doctor int foreign key references Family_doctor(Cod_fam_doctor) not null,
@@ -84,14 +86,14 @@ create table Referral(cod_ref int primary key,
 					  cod_MI smallint foreign key references Med_inst(cod_MI) not null)
 go
 
-create table Note(note_numb int primary key,
+create table Note(note_numb int,
 				  cod_spec int foreign key references Speciallist(cod_spec) not null,
 				  cod_pac int foreign key references Patient(cod_pac) not null,
 				  cod_diagnoz int foreign key references Diagnoza(cod_diagnoz) not null,
 				  cod_MI smallint foreign key references Med_inst(cod_MI) not null)
 go
 
-create table Recept(recept_numb int primary key,
+create table Recept(recept_numb int,
 					cod_pac int foreign key references Patient(cod_pac) not null,
 					cod_med int foreign key references Medicaments(cod_med) not null,
 					Dosage smallint,
@@ -106,10 +108,6 @@ go
 
 
 
-
-
-
-
 insert into Med_inst(cod_MI, name_MI, legal_adres, Tel_numb, Stamp)
 values (1001, 'Med Family', 'str.Sadovianu 7/5', '+37369982418', 'MedFamily'),
 	   (1002, 'Galaxia', 'str.Puskin 21/1', '+37367756224', 'Galaxia gr.')
@@ -118,17 +116,25 @@ Go
 select * from Med_inst
 Go
 
+insert into Area_doctor (id_area, area_name)
+values(1, 'Dacia'),
+	  (2, 'Cuza Voda'),
+	  (3, 'Decebal'),
+	  (4, 'Valea Crucii'),
+	  (5, 'Traian')
+go
 
-insert into Family_doctor(Cod_fam_doctor, fio_doct, Tel_munb, area, Stamp)
-values (2067, 'Burlakova Anna Sergei', '+37367766545', 'Dacia', 'Burlakova A.S.'),
-	   (2068, 'Fulger Elena Matvei', '+37368453213', 'Nicolae Milescu Spataru', 'Fulger A.M.'),
-	   (2069, 'Antonescu Anton Anton', '+37369999675', 'Sodoveanu', 'Antonescu A.A.'),
-	   (2070, 'Maskov Andrei Mihail', '+37367893421', 'Petru Zadnipru', 'Maskov A.M.'),
-	   (2071, 'Nastasiu Olgo Ivan', '+37368568258', 'Alecu Russo', 'Nastasiu O.I.')
+
+insert into Family_doctor(Cod_fam_doctor, fio_doct, Tel_munb, id_area, Stamp)
+values (2067, 'Burlakova Anna Sergei', '+37367766545', 1 , 'Burlakova A.S.'),
+	   (2068, 'Fulger Elena Matvei', '+37368453213', 2 , 'Fulger A.M.'),
+	   (2069, 'Antonescu Anton Anton', '+37369999675', 1 , 'Antonescu A.A.'),
+	   (2070, 'Maskov Andrei Mihail', '+37367893421',  3 , 'Maskov A.M.'),
+	   (2071, 'Nastasiu Olgo Ivan', '+37368568258', 5, 'Nastasiu O.I.')
 Go
 
-insert into Family_doctor(Cod_fam_doctor, fio_doct, Tel_munb, area, Stamp)
-values (2075, 'Burlakova Anna Sergei', '+37367766545', 'Dacia', 'Burlakova A.S.')
+insert into Family_doctor(Cod_fam_doctor, fio_doct, Tel_munb, id_area, Stamp)
+values (2075, 'Burlakova Anna Sergei', '+37367766545', 4 , 'Burlakova A.S.')
 go
 
 delete from Family_doctor where Cod_fam_doctor = 2075
@@ -217,13 +223,18 @@ Go
 
 
 
-
+--!!!change - adding family doctors to speciallists--
 
 insert into Speciallist(cod_spec, fio_spec, post, Stamp, cod_MI)
 values (10001, 'Crudov Dmitrii Anton', 'Nevrolog', 'Crudov D.M.', 1001),
 	   (12002, 'Malahov Andrei Nicolai', 'Terapeft', 'Malahov A.N.', 1002),
 	   (11003, 'Malisheva Elena Vasilii', 'Cardiolog', 'Malisheva E.V.', 1002),
-	   (11004, 'Cojocaru Aliona Eugen', 'Genicolog', 'Cojocaru A.E.', 1001)
+	   (11004, 'Cojocaru Aliona Eugen', 'Genicolog', 'Cojocaru A.E.', 1001),
+	   (2067, 'Burlakova Anna Sergei', 'Family doctor', 'Burlakova A.S.', 1001),
+	   (2068, 'Fulger Elena Matvei', 'Family doctor', 'Fulger A.M.', 1002),
+	   (2069, 'Antonescu Anton Anton', 'Family doctor', 'Antonescu A.A.',1002),
+	   (2070, 'Maskov Andrei Mihail', 'Family doctor',  'Maskov A.M.',1001),
+	   (2071, 'Nastasiu Olgo Ivan', 'Family doctor', 'Nastasiu O.I.', 1001)
 go
 
 select * from Speciallist
@@ -321,6 +332,9 @@ Go
 
 
 
+
+
+
 create index med_inst_indx on Med_inst(name_MI)
 go
 
@@ -354,10 +368,10 @@ go
 
 
 
---Ęëŕńńíŕ˙ đŕáîňŕ--
+--Классная работа--
 
 
-/*Âűâĺńňč číôîđěŕöčţ î âńĺő ďŕöčĺíňŕő, ńîńňî˙ůčő íŕ ö÷¸ňĺ*/
+/*Вывести информацию о всех пациентах, состоящих на цчёте*/
 
 select *
 from Patient
@@ -365,29 +379,29 @@ Go
 
 
 
-/*Âűâĺńňč Ôŕěčëčč č ŕäđĺńŕâńĺő ďŕöčĺíňîâ, ńîńňî˙ůčő íŕ ö÷¸ňĺ*/
+/*Вывести Фамилии и адресавсех пациентов, состоящих на цчёте*/
 
-/*Áĺç ďńĺâäîíčěîâ  ńňîëáöîâ*/
+/*Без псевдонимов  столбцов*/
 
 select fio_pac, pac_adres 
 from Patient
 Go
 
-/*C ďńĺâäîíčěŕěč  ńňîëáöîâ*/
+/*C псевдонимами  столбцов*/
 select fio_pac as Pacients, pac_adres as Adres
 from Patient
 Go
 
 
 
-/*Âűâĺńňč číôîđěŕöččţ î âńĺő Ńĺěĺéíűő âđŕ÷ŕő*/
+/*Вывести информациию о всех Семейных врачах*/
 
 select *
 from Family_doctor
 Go
 
 
-/*Âűâĺńňč Ńĺěĺéíîăî âđŕ÷ŕ, íŕ ó÷ŕńňęĺ óëčöű Äŕ÷č˙*/
+/*Вывести Семейного врача, на участке улицы Дачия*/
 
 select fio_doct as Doctor
 from Family_doctor
@@ -398,13 +412,13 @@ Go
 
 
 
-/*Âűâĺńňč číôîđěŕöčţ (ÔČÎ č ńďĺöčŕëüíîńňü) î âńĺő ńďĺöčŕëčńňŕő*/
+/*Вывести информацию (ФИО и специальность) о всех специалистах*/
 
 select fio_spec as Speciallist, post as Speciality
 from Speciallist
 Go
 
-/*Âűâĺńňč Ôŕěčëčţ î âńĺő ęŕđäčîëîăŕő*/
+/*Вывести Фамилию о всех кардиологах*/
 
 select fio_spec as Speciallist
 from Speciallist 
@@ -416,8 +430,8 @@ Go
 
 
 
-/*Âűâĺńňč íŕçâŕíč˙ ěĺäčęŕěĺíňîâ č čç äîçű (ăäĺ äîçŕ äŕíŕ â ěčëëčăđŕěěŕő)*/
-/*Ń äîáŕâëĺíčĺě äîďîëíčňĺëüíîăî ďîë˙ (mg)*/
+/*Вывести названия медикаментов и из дозы (где доза дана в миллиграммах)*/
+/*С добавлением дополнительного поля (mg)*/
 
 select med_name as Medicament, dosage*0.0001 as Doza, 'mg' as unit
 from Medicaments
@@ -425,8 +439,8 @@ Go
 
 
 
-/*Âűâĺńňč íŕçâŕíč˙ ěĺäčęŕěĺíňîâ č čç äîçű (ăäĺ äîçŕ äŕíŕ â ěčëëčăđŕěěŕő)*/
-/*Ń äîáŕâëĺíčĺě äîďîëíčňĺëüíîăî ďîë˙ (gr)*/
+/*Вывести названия медикаментов и из дозы (где доза дана в миллиграммах)*/
+/*С добавлением дополнительного поля (gr)*/
 
 select med_name as Medicament, dosage as Doza, 'gr' as unit
 from Medicaments
@@ -435,14 +449,14 @@ Go
 
 
 
-/*Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő, âîçđŕńň ęîňîđűő ďđĺâűřŕĺň 40 ëĺň*/
+/*Вывести информацию о пациентах, возраст которых превышает 40 лет*/
 
 select fio_pac as Pacient, Birth_date as Birthday_date, pac_adres as Adress
 from Patient
 where year(getdate()) - year(Birth_date) > 40
 Go
 
-/*Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő, âîçđŕńň ęîňîđűő ěĺíüřĺ 18 ëĺň*/
+/*Вывести информацию о пациентах, возраст которых меньше 18 лет*/
 
 select fio_pac as Pacient, Birth_date as Birthday_date, pac_adres as Adress
 from Patient
@@ -450,7 +464,7 @@ where year(getdate()) - year(Birth_date) < 18
 Go
 
 
-/*Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő, âîçđŕńň ęîňîđűő ěĺíüřĺ 40, íî áîëüřĺ 18 ëĺň*/
+/*Вывести информацию о пациентах, возраст которых меньше 40, но больше 18 лет*/
 
 select fio_pac as Pacient, Birth_date as Birthday_date, pac_adres as Adress
 from Patient
@@ -458,7 +472,7 @@ where   ( year(getdate()) - year(Birth_date) > 18 ) and ( year(getdate()) - year
 Go
 
 
-/*Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő (ÔČÎ č ŕäđĺń), ęîňîđűĺ đîäčëčńü â íî˙áđĺ*/
+/*Вывести информацию о пациентах (ФИО и адрес), которые родились в ноябре*/
 
 select fio_pac as Pacient, Birth_date as Birthday_date, pac_adres as Adress
 from Patient
@@ -466,7 +480,7 @@ where month(Birth_date) = 11
 Go
 
 
-/*Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő (ÔČÎ č ŕäđĺń), ęîňîđűĺ đîäčëčńü 13-ăî ÷čńëŕ*/
+/*Вывести информацию о пациентах (ФИО и адрес), которые родились 13-го числа*/
 
 select fio_pac as Pacient, Birth_date as Birthday_date, pac_adres as Adress
 from Patient
@@ -474,7 +488,7 @@ where day(Birth_date) = 13
 Go
 
 
-/*Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő (ÔČÎ č ŕäđĺń), ęîňîđűĺ đîäčëčńü çčěîé*/
+/*Вывести информацию о пациентах (ФИО и адрес), которые родились зимой*/
 
 select fio_pac as Pacient, Birth_date as Birthday_date, pac_adres as Adress
 from Patient
@@ -482,7 +496,7 @@ where ( month(Birth_date) >= 12 ) or ( month(Birth_date) <= 2 )
 Go
 
 
-/*Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő (ÔČÎ č ŕäđĺń), ęîňîđűĺ đîäčëčńü ëĺňîě*/
+/*Вывести информацию о пациентах (ФИО и адрес), которые родились летом*/
 
 select fio_pac as Pacient, Birth_date as Birthday_date, pac_adres as Adress
 from Patient
@@ -496,7 +510,7 @@ Go
 
 
 
-/*Âűâĺńňč ďđîäîëćčňĺëüíîńňü ëĺ÷ĺíč˙ "Ěŕńńŕć"*/
+/*Вывести продолжительность лечения "Массаж"*/
 
 select duration
 from Tratement
@@ -508,9 +522,9 @@ select *
 from Tratement
 Go
 
---Äîěŕří˙˙ đŕáîňŕ--
+--Домашняя работа--
 
---Âűâĺńňč ńďčńîę ďđĺďĺđĺňîâ, ďđĺäíŕçíŕ÷ĺííűő äë˙ ńďčíű--
+--Вывести список преперетов, предназначенных для спины--
 
 select med_name as medicament_name, purpose, dosage, 'mg' as unit, instruction
 from Medicaments
@@ -518,28 +532,28 @@ where purpose like '%_ack%'
 go
 
 
---Âűâĺńňč íŕçâŕíč˙ áîëĺçíĺé, â ęîňîđűő ńîäĺđćčňń˙ ńëîâî "áîëü (pain)"--
+--Вывести названия болезней, в которых содержится слово "боль (pain)"--
 select name_diagnoz as Diagnoz_name
 from Diagnoza
 where name_diagnoz like '% pain%'
 go
 
 
---Âűâĺńňč íŕçâŕíčĺ c "ë¸ăęčěč"(light) ěĺňîäŕěč ëĺ÷ĺíč˙--
+--Вывести название c "лёгкими"(light) методами лечения--
 
 select trat_name as Tratement_name, trat_method as Tratement_method, duration, 'days' as unit
 from Tratement
-where trat_method like '%_ight %'   --% - ýňî ëčáî 0, ëčáî 1, ëčáî 2 č ň.ä. ëţáűő ńčěâîëîâ;		_ - ýňî 1 ëţáîé ńčěâîë--
-go									--'%_ight', a íĺ '%Light', ňŕę ęŕę ěîćĺň áűňü íĺ ňîëüęî "Light", íî č "light" --
+where trat_method like '%_ight %'   --% - это либо 0, либо 1, либо 2 и т.д. любых символов;		_ - это 1 любой символ--
+go									--'%_ight', a не '%Light', так как может быть не только "Light", но и "light" --
 
 
---Âűâĺńňč číôîđěŕöčţ (ÔČÎ) î âńĺő íĺâđîëîăŕő--
+--Вывести информацию (ФИО) о всех неврологах--
 select  fio_spec as Speciallist_FIO
 from Speciallist
 where post = 'Nevrolog'
 go
 
---Âűâĺńňč číôîđěŕöčţ î âńĺő ńďĺöčŕëëčńňĺ ń ôŕěčëčĺé Malahov--
+--Вывести информацию о всех специаллисте с фамилией Malahov--
 
 select cod_spec as Speciallist_code, fio_spec as Speciallist_FIO, post as Speciallist_function, Stamp
 from Speciallist
@@ -547,7 +561,7 @@ where fio_spec like 'Malahov %'
 go
 
 
---* Âűâĺńňč číôîđěŕöčţ î âńĺő ńďĺöčŕëëčńňĺ ń čěĺíĺě Ĺëĺíŕ--
+--* Вывести информацию о всех специаллисте с именем Елена--
 
 select cod_spec as Speciallist_code, fio_spec as Speciallist_FIO, post as Speciallist_function, Stamp
 from Speciallist
@@ -555,41 +569,41 @@ where fio_spec like '% Elena %'
 go
 
 
---Âűâĺńňč číôîđěŕöčţ î ńĺěĺéíîě âđŕ÷ĺ íŕ ó÷ŕńňęĺ Nicolae Milescu Spataru--
+--Вывести информацию о семейном враче на участке Nicolae Milescu Spataru--
 
 select fio_doct as Family_doctor_FIO, Tel_munb as Telephone, Stamp
 from Family_doctor
 where area = 'Nicolae Milescu Spataru'
 go
 
---Âűâĺńňč číôîđěŕöčţ î âńĺő ďŕöčĺíňŕő, ÷ĺé âîçđŕńň <= 18--
+--Вывести информацию о всех пациентах, чей возраст <= 18--
 select fio_pac as Pacient_FIO, age, gender, Birth_date as Birthday_date, pac_adres as Adress, pac_tel as Telephone, Number_insurance_police as Polise_name, Work as work, IDNP
 from Patient
 where age <= 18 
 go
 
---Âűâĺńňč číôîđěŕöčţ î âńĺő ďŕöčĺíňŕő, ÷ĺé âîçđŕńň > 18 č <= 30--
+--Вывести информацию о всех пациентах, чей возраст > 18 и <= 30--
 
 select fio_pac as Pacient_FIO, age, gender, Birth_date as Birthday_date, pac_adres as Adress, pac_tel as Telephone, Number_insurance_police as Polise_name, Work as work, IDNP
 from Patient
 where  (age > 18) and (age <= 30) 
 go
 
---Âűâĺńňč číôîđěŕöčţ î âńĺő ďŕöčĺíňŕő, ÷ĺé âîçđŕńň > 30--
+--Вывести информацию о всех пациентах, чей возраст > 30--
 
 select fio_pac as Pacient_FIO, age, gender, Birth_date as Birthday_date, pac_adres as Adress, pac_tel as Telephone, Number_insurance_police as Polise_name, Work as work, IDNP
 from Patient
 where age > 30 
 go
 
---Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňĺ, ÷ü˙ ôŕěčëč˙ Botsan--
+--Вывести информацию о пациенте, чья фамилия Botsan--
 
 select fio_pac as Pacient_FIO, age, gender, Birth_date as Birthday_date, pac_adres as Adress, pac_tel as Telephone, Number_insurance_police as Polise_name, Work as work, IDNP
 from Patient
 where fio_pac like 'Botsan %' 
 go
 
---Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňĺ, ÷ü¸ čě˙ Íčęîëŕé--
+--Вывести информацию о пациенте, чьё имя Николай--
 
 select fio_pac as Pacient_FIO, age, gender, Birth_date as Birthday_date, pac_adres as Adress, pac_tel as Telephone, Number_insurance_police as Polise_name, Work as work, IDNP
 from Patient
@@ -601,33 +615,33 @@ go
 
 
 
---***Äîďîëíčňĺëüíî (ń ĺńňĺńňâĺííűě ńîĺäčíĺíčĺě)***--
+--***Дополнительно (с естественным соединением)***--
 
 
 
 
---Âűâĺńňč číôîđěŕöčţ î ńĺěĺéíîě âđŕ÷ĺ ďŕöčĺíňŕ Botnaru Iurii Ivan
+--Вывести информацию о семейном враче пациента Botnaru Iurii Ivan
 
 select Patient.fio_pac as Pacient_FIO, Family_doctor.fio_doct as Family_doctor_FIO, Family_doctor.Tel_munb as Telephone, Family_doctor.area, Family_doctor.Stamp
 from Patient
-inner join Family_doctor on Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor --Ĺńňĺńňâĺííîĺ ńîĺäčíĺíčĺ '%_ack %'  c Family_doctor. Đĺçóëüňŕň - íîâŕ˙ ňŕáëčöŕ ńî ńňîëáöŕěč Patient č Family_doctor--
-where (Patient.fio_pac = 'Botnaru Iurii Ivan') --Âűáîđęŕ čç íîâîăî îňíîřĺíč˙ (ďîńëĺ ĺńňĺńňâĺííîăî ńîĺäčíĺč˙) ńî çíŕ÷ĺíč˙ěč čç Patient č čç Family_doctor => óćĺ íĺ íóćíî óńëîâčĺ  and (Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor)--
+inner join Family_doctor on Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor --Естественное соединение '%_ack %'  c Family_doctor. Результат - новая таблица со столбцами Patient и Family_doctor--
+where (Patient.fio_pac = 'Botnaru Iurii Ivan') --Выборка из нового отношения (после естественного соединеия) со значениями из Patient и из Family_doctor => уже не нужно условие  and (Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor)--
 go
 
 
---Âűâĺńňč ëĺ÷ĺíčĺ äë˙ áîëĺçíč Back pain--
+--Вывести лечение для болезни Back pain--
 
 select Diagnoza.name_diagnoz as Diagnoz, Tratement.trat_name as Tratement_name, Tratement.trat_method as Tratement_method, Tratement.duration --as duration--s
 from Diagnoza
-inner join Tratement on (Diagnoza.cod_trate = Tratement.cod_trate) --Ĺńňĺńňâĺííîĺ ńîĺäčíĺíčĺ Diagnoza c Tratement. Đĺçóëüňŕň - íîâŕ˙ ňŕáëčöŕ ńî ńňîëáöŕěč Diagnoza č Tratement--
-where Diagnoza.name_diagnoz = 'Back pain' --Âűáîđęŕ čç íîâîăî îňíîřĺíč˙ (ďîńëĺ ĺńňĺńňâĺííîăî ńîĺäčíĺč˙) ńî çíŕ÷ĺíč˙ěč čç Patient č čç Family_doctor => óćĺ íĺ íóćíî óńëîâčĺ  and (Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor)--
+inner join Tratement on (Diagnoza.cod_trate = Tratement.cod_trate) --Естественное соединение Diagnoza c Tratement. Результат - новая таблица со столбцами Diagnoza и Tratement--
+where Diagnoza.name_diagnoz = 'Back pain' --Выборка из нового отношения (после естественного соединеия) со значениями из Patient и из Family_doctor => уже не нужно условие  and (Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor)--
 go
 
---Âűâĺńňč ëĺ÷ĺíčĺ äë˙ âńĺő áîëĺçíĺé ńî ńďčíîé (Back)--
+--Вывести лечение для всех болезней со спиной (Back)--
 select Diagnoza.name_diagnoz as Diagnoz, Tratement.trat_name as Tratement_name, Tratement.trat_method as Tratement_method, Tratement.duration --as duration--s
 from Diagnoza
-inner join Tratement on (Diagnoza.cod_trate = Tratement.cod_trate) --Ĺńňĺńňâĺííîĺ ńîĺäčíĺíčĺ Diagnoza c Tratement. Đĺçóëüňŕň - íîâŕ˙ ňŕáëčöŕ ńî ńňîëáöŕěč Diagnoza č Tratement--
-where Diagnoza.name_diagnoz like '%_ack %' --'%_ack %' ňŕę ęŕę ěîćĺň áűňü č Back č back--
+inner join Tratement on (Diagnoza.cod_trate = Tratement.cod_trate) --Естественное соединение Diagnoza c Tratement. Результат - новая таблица со столбцами Diagnoza и Tratement--
+where Diagnoza.name_diagnoz like '%_ack %' --'%_ack %' так как может быть и Back и back--
 go
 
 
@@ -635,15 +649,15 @@ go
 
 
 
---Ęëŕńńíŕ˙ đŕáîňŕ--
+--Классная работа--
 
 
 
 
 
---Âűâĺńňč ęîëč÷ĺńňâî ó÷ŕńňęîâ ó ęŕćäîăî ńĺěĺéíîăî âđŕ÷ŕ--
+--Вывести количество участков у каждого семейного врача--
 
-select fio_doct as Medic, count(area) as Area_number --count - ôóíęöč˙ äë˙ ďîäń÷čňűâŕíč˙ ÷čńëŕ ęŕđňĺćĺé--
+select fio_doct as Medic, count(area) as Area_number --count - функция для подсчитывания числа картежей--
 from Family_doctor
 group by fio_doct
 go
@@ -654,7 +668,7 @@ go
 
 
 
---Âűâĺńňč ęîëëč÷ĺńňâî íŕčěĺíîâŕíčé ń ęŕćäîé äîçčđîâęîé--
+--Вывести колличество наименований с каждой дозировкой--
 
 select dosage as Dozirovka, count(med_name) as Medicaments_number
 from Medicaments
@@ -667,9 +681,9 @@ go
 
 
 
---Âűâĺńňč ÷čńëî ďŕöčĺíňîâ â ďîëčęëčíčęĺ--
+--Вывести число пациентов в поликлинике--
 
-select count(*) as number_of_pacients  --* - îçíŕ÷ŕĺň, ÷ňî ďîäń÷čňűâŕĺě âńĺ çŕďčńč--
+select count(*) as number_of_pacients  --* - означает, что подсчитываем все записи--
 from Patient 
 go
 
@@ -680,9 +694,9 @@ go
 
 
 
---Âűâĺńňč ęîëč÷ĺńňâî íŕčěĺíîâŕíčé ěĺäčęîěĺíňîâ--
+--Вывести количество наименований медикоментов--
 
-select count(*) as number_of_medicaments  --* - îçíŕ÷ŕĺň, ÷ňî ďîäń÷čňűâŕĺě âńĺ çŕďčńč--
+select count(*) as number_of_medicaments  --* - означает, что подсчитываем все записи--
 from Medicaments 
 go
 
@@ -690,7 +704,7 @@ go
 
 
 
---Âűâĺńüňč ęîëč÷ĺńňâî ďŕöčĺíňîâ ěóćńęîăî č ćĺíńęîăî ďîëëŕ--
+--Вывесьти количество пациентов мужского и женского полла--
 
 select gender, count(*) as number_of_genders
 from Patient 
@@ -710,17 +724,17 @@ go
 
 
 
---äîěŕří˙˙ đŕáîňŕ--
+--домашняя работа--
 
 
---âűâĺńňč ęîëč÷ĺńňâî ńďĺöčŕëëčńňîâ ďî ęŕćäîé ńďĺöčŕëüíîńňč--
+--вывести количество специаллистов по каждой специальности--
 select post as Speciallity, count(*) as number_of_speciallists
 from Speciallist
 group by post
 go
 
 
---Âűâĺńňč ÷čńëî ďŕöčĺíňîâ ó ęŕćäîăî ńĺěĺéíîăî âđŕ÷ŕ--
+--Вывести число пациентов у каждого семейного врача--
 select Cod_fam_doctor as Famyli_doctor, count(*) as number_of_patients
 from Patient
 group by Cod_fam_doctor
@@ -728,7 +742,7 @@ go
 
 
 
---âűâĺńňč ÷čńëî ďŕöčĺíňîâ ęŕćäîăî ăîäŕ, íŕ÷číŕ˙ ń 1990, ńîńňî˙ůčő íŕ ó÷¸ňĺ ó âđŕ÷ŕ--
+--вывести число пациентов каждого года, начиная с 1990, состоящих на учёте у врача--
 select year(Birth_date) as PYear, count(*) as number_of_patients
 from Patient
 group by year(Birth_date)
@@ -736,21 +750,21 @@ having year(Birth_date) >= 1990
 go
 
 
---Âűâĺńňč ÷čńëî çŕęëţ÷ĺíčé, âűďčńŕííűő ęŕćäűě ńďĺöčŕëëčńňîě--
+--Вывести число заключений, выписанных каждым специаллистом--
 select cod_spec as Speciallist, count(*) as number_of_notes
 from Note
 group by cod_spec
 go
 
 
---âűâĺńňč ÷čńëî ďŕöčĺíňîâ äë˙ ęŕćäîăî äčŕăíîçŕ, ďîńňŕâëĺííűő ńďĺöčŕëëčńňîě--
+--вывести число пациентов для каждого диагноза, поставленных специаллистом--
 select cod_diagnoz as Diagnoza, count(*) as number_of_patients
 from Note
 group by cod_diagnoz
 go
 
 
---âűâĺńňč ÷čńëî ďđĺďŕđŕňîâ äë˙ ęŕćäîăî ďđĺäíŕçíŕ÷ĺíč˙--
+--вывести число препаратов для каждого предназначения--
 select purpose, count(*) as number_of_medicaments 
 from Medicaments
 group by purpose
@@ -775,16 +789,16 @@ go
 
 
 
---Äîěŕří˙˙ đŕáîňŕ 15.03.22--
---ńîçäŕéňĺ  âńĺ âčäű ńëîćíűő (+ ěîćĺň áűňü č ďĺđĺńĺ÷ĺíčĺ, č đŕçíîńňü, č îáúĺäčíĺíčĺ (- ňîćĺ ńëîćíűĺ, ňŕę ęŕę đŕáîňŕţň íĺ ń îäíčě îňíîřĺíčĺě)) çŕďđîńîâ č  ďîäçŕďđîńîâ, ęîňîđűĺ âűâîä˙ň ńŕěóţ íĺîáőîäčěóţ číôîđěŕöčţ ďî ďđîĺęňó.--
+--Домашняя работа 15.03.22--
+--создайте  все виды сложных (+ может быть и пересечение, и разность, и объединение (- тоже сложные, так как работают не с одним отношением)) запросов и  подзапросов, которые выводят самую необходимую информацию по проекту.--
 
 
 
---Ďîäçŕďđîńű (ęîăäŕ äë˙ ĺńňĺńňâĺííîăî ńîĺäčíĺíč˙ (čëč ďĺđĺńĺ÷ĺíč˙, đŕçíîńňč, čëč îáúĺäčíĺíč˙) ńëčřęîě ěíîăî číôîđěŕöčč)--
+--Подзапросы (когда для естественного соединения (или пересечения, разности, или объединения) слишком много информации)--
 
 
 
---Âűâĺńňč ěĺňîäű ëĺ÷ĺíč˙, ďđč ďîěîůč ęîňîđűő ëĺ÷čňń˙ Áîëü â ńďčíĺ--
+--Вывести методы лечения, при помощи которых лечится Боль в спине--
 select  trat_name as Traement
 from Tratement
 where cod_trate in (select cod_trate
@@ -794,7 +808,7 @@ where cod_trate in (select cod_trate
 
 
 
---âűâĺńňč ęŕęčő ńďĺöčŕëčńňîâ ďđîř¸ë ďŕöčĺíň Globu Sergei Vitalii--
+--вывести каких специалистов прошёл пациент Globu Sergei Vitalii--
 select fio_spec as Speciallist, post
 from Speciallist
 where cod_spec in (select cod_spec
@@ -806,7 +820,7 @@ where cod_spec in (select cod_spec
 				  )
 go
 
---âűâĺńňč ęŕęčĺ ďđĺďŕđŕňű áűëč âűďčńŕíű ďŕöčĺíňó Globu Sergei Vitalii--
+--вывести какие препараты были выписаны пациенту Globu Sergei Vitalii--
 select med_name
 from Medicaments inner join Recept on Medicaments.cod_med = Recept.cod_med
 where cod_pac = (select cod_pac
@@ -816,12 +830,12 @@ where cod_pac = (select cod_pac
 go
 
 
---Âűâĺńňč ęŕęčěč ďđĺďŕđŕňŕěč ëĺ÷čňń˙ äčŕăíîç: áîëü â ńďčíĺ--
+--Вывести какими препаратами лечится диагноз: боль в спине--
 select med_name as Medicament_name
 from Medicaments
-where cod_med in (select cod_med /*in, ŕ íĺ =, ňŕę ęŕę ěîćĺň ďîâňîđ˙ňüń˙ â îňíîřĺíčč Tratement_Medicaments*/
+where cod_med in (select cod_med /*in, а не =, так как может повторяться в отношении Tratement_Medicaments*/
 				  from Tratement_Medicaments
-				  where cod_trate = (select cod_trate /* =, ŕ íĺ in, ňŕę ęŕę íĺ ěîćĺň ďîâňîđ˙ňüń˙ â îňíîřĺíčč Tratement*/
+				  where cod_trate = (select cod_trate /* =, а не in, так как не может повторяться в отношении Tratement*/
 									 from Tratement
 									 where cod_trate in (select cod_trate
 														 from Diagnoza
@@ -832,12 +846,12 @@ where cod_med in (select cod_med /*in, ŕ íĺ =, ňŕę ęŕę ěîćĺň ďî�
 go
 
 
---čëč áĺç îňíîřĺíč˙ tratement (íŕďđ˙ěóţ Diagnoza -> Tratement_Medicaments -> Medicaments)
+--или без отношения tratement (напрямую Diagnoza -> Tratement_Medicaments -> Medicaments)
 select med_name as Medicament_name
 from Medicaments
-where cod_med in (select cod_med /*in, ŕ íĺ =, ňŕę ęŕę ěîćĺň ďîâňîđ˙ňüń˙ â îňíîřĺíčč Tratement_Medicaments*/
+where cod_med in (select cod_med /*in, а не =, так как может повторяться в отношении Tratement_Medicaments*/
 				  from Tratement_Medicaments
-				  where cod_trate in (select cod_trate /*in, ŕ íĺ =, ňŕę ęŕę ďîâňîđ˙ĺňń˙ â îňíîřĺíčč Diagnoza*/
+				  where cod_trate in (select cod_trate /*in, а не =, так как повторяется в отношении Diagnoza*/
 														 from Diagnoza
 														 where name_diagnoz = 'Back pain'
 									)
@@ -848,7 +862,7 @@ go
 
 
 
---Âűâĺńňč číôîđěŕöčţ î ďŕöčĺíňŕő ćŕëóţůčőń˙ íŕ áîëü â ńďčíĺ--
+--Вывести информацию о пациентах жалующихся на боль в спине--
 select fio_pac as Pacient_FIO, age, gender, pac_adres as Pacient_adres, pac_tel as Telephone, fio_doct as Doctor_FIO
 from Patient inner join Family_doctor on Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor
 where cod_pac in(select cod_pac
@@ -863,7 +877,7 @@ go
 
 
 
---âűâĺńňč číôîđěŕöčţ î âńĺő ďŕöčĺíňŕő äë˙ ńĺěĺéíîăî âđŕ÷ŕ Maskov Andrei Mihail--
+--вывести информацию о всех пациентах для семейного врача Maskov Andrei Mihail--
 select fio_pac as Pacient_FIO, age, gender, pac_adres as Pacient_adres, pac_tel as Telephone
 from Patient
 where Cod_fam_doctor = (select Cod_fam_doctor
@@ -876,7 +890,7 @@ go
 
 
 
---âűâĺńňč âńĺ çŕáîëĺâŕíč˙ (äčŕăíîçű) ďŕöčĺíňŕ Globu Sergei Vitalii--
+--вывести все заболевания (диагнозы) пациента Globu Sergei Vitalii--
 select name_diagnoz as Diagnoz_name
 from Diagnoza
 where cod_diagnoz in (select cod_diagnoz
@@ -889,11 +903,11 @@ where cod_diagnoz in (select cod_diagnoz
 go
 
 
-/*Ĺńëč íĺ óęŕçŕňü óńëîâčĺ ó âđŕ÷ŕ, ňî ďîäçŕďđîń âűäŕńň íĺ îäíî çíŕ÷ĺíčĺ, ŕ öĺëîĺ ěíîćĺńňâî (ňî ĺńňü âńĺő âđŕ÷ĺé) => íŕäî áűëî áű ďčńŕňü íĺ =, ŕ in, ŕ đĺçóëüňŕň áűë áű íĺ äë˙ îäíîăî âđŕ÷ŕ, ŕ äë˙ âńĺő...*/
+/*Если не указать условие у врача, то подзапрос выдаст не одно значение, а целое множество (то есть всех врачей) => надо было бы писать не =, а in, а результат был бы не для одного врача, а для всех...*/
 
 
 
---? Ďîäń÷čňŕňü îáůĺĺ ęîëč÷ĺńňâî đĺöĺďňîâ, âűďčńŕííűő äë˙ ďŕöčĺíňŕ Globu Sergei Vitalii--
+--? Подсчитать общее количество рецептов, выписанных для пациента Globu Sergei Vitalii--
 select count(*) as number_of_recepts
 from  Recept
 where cod_pac = (select cod_pac
@@ -908,7 +922,7 @@ go
 
 
 
---? Ďîäń÷čňŕňü îáůĺĺ ęîëč÷ĺńňâî íŕďđĺâëĺíčé, âűďčńŕííűő äë˙ ďŕöčĺíňŕ Globu Sergei Vitalii--
+--? Подсчитать общее количество напревлений, выписанных для пациента Globu Sergei Vitalii--
 select count(*) as number_of_referrals
 from  Referral
 where cod_pac = (select cod_pac
@@ -923,17 +937,17 @@ go
 
 
 
---Ĺńňĺńňâĺííîĺ ńîĺäčíĺíčĺ (ńëîćíűĺ çŕďđîńű)--
+--Естественное соединение (сложные запросы)--
 
 
 
---âűâĺńňč číôîđěŕöčţ î âńĺő ďŕöčĺíňŕő č čő ńĺěĺéíűő âđŕ÷ĺé-- 
+--вывести информацию о всех пациентах и их семейных врачей-- 
 select fio_doct as doctor, fio_pac as patient, age, gender, Birth_date as Birthday, pac_adres as adres, pac_tel as telephone, Work, IDNP 
 from Family_doctor inner join Patient on Family_doctor.Cod_fam_doctor = Patient.Cod_fam_doctor
 go
 
 
---âűâĺńňč çŕáîëĺâŕíčĺ č ńďîńîá ĺăî ëĺ÷ĺíč˙--
+--вывести заболевание и способ его лечения--
 select name_diagnoz as Diagnoz_name, trat_name as Tratement_method
 from Diagnoza inner join Tratement on Diagnoza.cod_trate = Tratement.cod_trate
 go
@@ -942,13 +956,13 @@ go
 
 
 
---*âűâĺńňč çŕáîëĺâŕíčĺ, ńďîńîá ĺăî ëĺ÷ĺíč˙ č ďđĺďŕđŕňű, ęîňîđűěč îíî ëĺ÷čňń˙--
-/*Äë˙ ýňîăî ˙ čńďîëüçîâŕë ďđĺäńňŕâëĺíč˙:
-1)ńîĺäčíčě Diagnoza č Trtatement 
-2)ńîĺäčíčě Medicaments č Tratement_Medicanents
-3)ńîĺäčí˙ĺě â îäíî îáůĺĺ ďđĺäńňŕâëĺíčĺ (ďî ęîäó ëĺ÷ĺíč˙)
+--*вывести заболевание, способ его лечения и препараты, которыми оно лечится--
+/*Для этого я использовал представления:
+1)соединим Diagnoza и Trtatement 
+2)соединим Medicaments и Tratement_Medicanents
+3)соединяем в одно общее представление (по коду лечения)
 
-Â ňŕęîě ďîđ˙äęĺ áűńňđĺĺ č óäîáíĺĺ
+В таком порядке быстрее и удобнее
 */
 
 --1.--
@@ -984,8 +998,8 @@ go
 
 
 
---Âűâĺńňč číôîđěŕöčţ î ňĺő ďŕöčĺíňŕő, ęîňîđűĺ ćŕëóţňń˙ íŕ ăîëîâíóţ áîëü, íî íĺ ćŕëóţňń˙ íŕ áîëü â ńďčíĺ--
-/*(ýňîň çŕďđîń č ńî ńëîćíűě çŕďđîńîě, č ń ďîäçŕďđîńŕěč, č ń îďĺđöŕöčĺé đŕçíîńňč (őîň˙ îíŕ ňîćĺ îňíîńčňń˙ ę ńëîćíűě çŕďđîńŕě))*/
+--Вывести информацию о тех пациентах, которые жалуются на головную боль, но не жалуются на боль в спине--
+/*(этот запрос и со сложным запросом, и с подзапросами, и с оперцацией разности (хотя она тоже относится к сложным запросам))*/
 (select fio_pac as Pacient_FIO, age, gender, pac_adres as Pacient_adres, pac_tel as Telephone, Work, fio_doct
 from Patient inner join Family_doctor on Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor
 where cod_pac in (select cod_pac
@@ -1007,27 +1021,27 @@ where cod_pac in (select cod_pac
 )
 go
 
---Âűâĺńňč číôîđěŕöčţ î ńďĺöčŕëëčńňŕő č ěĺäčöčíńęîĺ ó÷đĺćäĺíčĺ íŕ ęîňîđűĺ îíč đŕáîňŕţň--
+--Вывести информацию о специаллистах и медицинское учреждение на которые они работают--
 select fio_spec as Speciallist, post, name_MI
 from Speciallist inner join Med_inst on Speciallist.cod_MI = Med_inst.cod_MI
 go
 
---***âűâĺńňč ÷čńëî ńďĺöčŕëëčńňîâ, đŕáîňŕţůčő íŕ ěĺä. ó÷đĺćäĺíčĺ, äë˙ ęŕćäîăî ěĺä. ó÷đĺćäĺíč˙--
+--***вывести число специаллистов, работающих на мед. учреждение, для каждого мед. учреждения--
 select name_MI, count(*) as number_of_speciallists
 from Med_inst inner join Speciallist on Med_inst.cod_MI = Speciallist.cod_MI
 group by Med_inst.name_MI
 go
 
 
---âűâĺńňč ďŕđŕěč ńďĺöčŕëëčńňîâ â îäčíŕęîâűěč äîëćíîńň˙ěč--
+--вывести парами специаллистов в одинаковыми должностями--
 select S1.fio_spec as Speciallist_1, S2.fio_spec as Speciallist_2, S1.post
 from Speciallist as S1, Speciallist as S2
-where S1.post = S2.post and S1.fio_spec < S2.fio_spec /* "and ... <" - ňŕę ęŕę ˙ áóäó ńěîňđĺňü âńĺő ňĺő ńďĺöčŕëëčńňîâ, ÷ňî íčćĺ, (ŕ îíč > đŕńńěŕňđčâŕĺěîăî => çíŕę <)*/
+where S1.post = S2.post and S1.fio_spec < S2.fio_spec /* "and ... <" - так как я буду смотреть всех тех специаллистов, что ниже, (а они > рассматриваемого => знак <)*/
 go
 
 
 /*
-×ňîáű đŕáîňŕëî
+Чтобы работало
 
 select *
 from Speciallist
@@ -1044,10 +1058,10 @@ go
 
 
 
---Ęëŕńńíŕ˙ đŕáîňŕ çŕ 21.03.22--
+--Классная работа за 21.03.22--
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ Ďŕöčĺíň-Ńĺěĺéíűé âđŕ÷--
+--Создадим представление Пациент-Семейный врач--
 create view Patient_Fam_doctor_view as
 select cod_pac, fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, fio_doct, Tel_munb, area, Stamp
 from Patient inner join Family_doctor on Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor
@@ -1067,7 +1081,7 @@ select *
 from Patient_Fam_doctor_Referral_view
 go
 
---Âűâĺńňč ńďčńîę íŕ ďđč¸ě ę ńĺěĺéíîěó âđŕ÷ó çŕ 2022-02-17 ÷čńëî--
+--Вывести список на приём к семейному врачу за 2022-02-17 число--
 select fio_pac as Patient, vizit_date as Visit_time
 from Patient_Fam_doctor_Referral_view
 where year(vizit_date) = 2022 and month(vizit_date) = 02 and day(vizit_date) = 17
@@ -1076,7 +1090,7 @@ go
 
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ äë˙ çŕďčńĺé ę ńďĺöčŕëčńňŕě--
+--Создадим представление для записей к специалистам--
 create view Patient_Referral_view as
 select fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, cod_spec, cod_diagnoz, vizit_date
 from Patient inner join Referral on Patient.cod_pac = Referral.cod_pac
@@ -1104,15 +1118,15 @@ from Patient_Referral_Spec_view
 go
 
 
---âűâĺńňč ôŕěčëčč ďŕöčĺíňîâ č äŕňű ďđčĺěŕ, ęîňîđűě äŕëč íŕďđŕâëĺíčĺ ę íĺâđîëîăó--
+--вывести фамилии пациентов и даты приема, которым дали направление к неврологу--
 select fio_pac, vizit_date
 from Patient_Referral_Spec_view
 where post = 'Nevrolog'
 go
 
 
---Ďîńěîňđĺňü â ęŕęîě ěĺä. ó÷đĺćäĺíčč ďđčíčěŕĺň íĺâđîëîă, ę ęîňîđîěó áűëč íŕďđŕâëĺíű ďŕöčĺíňű--
-select distinct name_MI /*distinct - óáčđŕĺň ďîâňîđĺíč˙*/ 
+--Посмотреть в каком мед. учреждении принимает невролог, к которому были направлены пациенты--
+select distinct name_MI /*distinct - убирает повторения*/ 
 from Patient_Referral_Spec_view
 where post = 'Nevrolog'
 go
@@ -1175,15 +1189,15 @@ go
 
 
 
---Äîěŕří˙˙ đŕáîňŕ çŕ 29.03.2022--
+--Домашняя работа за 29.03.2022--
 
---Çŕäŕíčĺ: ńîçäŕéňĺ  âńĺ  íĺîáőîäčěűĺ äë˙ ďđîĺęňŕ ďđĺäńňŕâëĺíč˙ č îáîńíóéňĺ íĺîáőîäčěîńňü čő ńîçäŕíč˙.--
+--Задание: создайте  все  необходимые для проекта представления и обоснуйте необходимость их создания.--
 
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ Ďŕöčĺíň-Ńĺěĺéíűé âđŕ÷--
+--Создадим представление Пациент-Семейный врач--
 create view Patient_Fam_doctor_view as
-select cod_pac, fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, fio_doct, Tel_munb, area, Stamp
+select cod_pac, fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, fio_doct, Tel_munb, id_area, Stamp
 from Patient inner join Family_doctor on Patient.Cod_fam_doctor = Family_doctor.Cod_fam_doctor
 go
 
@@ -1193,7 +1207,7 @@ from Patient_Fam_doctor_view
 go
 
 create view Patient_Fam_doctor_Referral_view as
-select fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, fio_doct, Tel_munb, area, Stamp, cod_diagnoz, vizit_date
+select fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, fio_doct, Tel_munb, id_area, Stamp, cod_diagnoz, vizit_date
 from Patient_Fam_doctor_view inner join Referral on Patient_Fam_doctor_view.cod_pac = Referral.cod_pac
 go
 
@@ -1206,7 +1220,7 @@ go
 
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ äë˙ çŕďčńĺé ę ńďĺöčŕëčńňŕě--
+--Создадим представление для записей к специалистам--
 create view Patient_Referral_view as
 select fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, cod_spec, cod_diagnoz, vizit_date
 from Patient inner join Referral on Patient.cod_pac = Referral.cod_pac
@@ -1234,14 +1248,14 @@ select *
 from Patient_Referral_Spec_view
 go
 
-/*Äŕííűĺ ďđĺäńňŕâëĺíč˙ íŕě íĺîáőîäčěű äë˙ ňîăî, ÷ňîáű áűńňđî ďîëó÷čňü číôîđěŕöčţ î çŕďčń˙ő ďŕöčĺíňîâ ę âđŕ÷ŕě...*/
+/*Данные представления нам необходимы для того, чтобы быстро получить информацию о записях пациентов к врачам...*/
 
 
 
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ î âńĺő çŕáîëĺâŕíč˙ő č ńďîńîáŕő čő ëĺ÷ĺíč˙--
-/*Äŕííîĺ ďđĺäńňŕâëĺíčĺ íŕě íĺîáőîäčěî äë˙ ňîăî, ÷ňîáű çíŕňü, ęŕęčě îáđŕçîě ëĺ÷čňń˙ ňî čëč číîĺ çŕáîëĺâŕíčĺ (ŕ ňŕęćĺ ęŕęčěč ďđĺďŕđŕňŕěč - ďîëĺçíî äë˙ âűďčńűâŕíč˙ đĺöĺďňîâ)*/
+--Создадим представление о всех заболеваниях и способах их лечения--
+/*Данное представление нам необходимо для того, чтобы знать, каким образом лечится то или иное заболевание (а также какими препаратами - полезно для выписывания рецептов)*/
 create view Tratement_diagnoza_view as
 select name_diagnoz, trat_name, trat_method, duration, Tratement.cod_trate
 from Tratement inner join Diagnoza on Tratement.cod_trate = Diagnoza.cod_trate
@@ -1276,8 +1290,8 @@ go
 
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ äë˙ âńĺő ďđĺďŕđŕňŕő, âűďčńŕííűő â đĺöĺďňŕő--
-/*Äŕííîĺ ďđĺäńňŕâëĺíčĺ â äŕëüíĺéřĺě íŕě íĺîáőîäčěî äë˙ ňîăî, ÷ňîáű óçíŕňü ęŕęčĺ ďđĺďŕđŕňű áűëč âűďčńŕíű ňîěó čëč číîěó ďŕöčĺíňó*/
+--Создадим представление для всех препаратах, выписанных в рецептах--
+/*Данное представление в дальнейшем нам необходимо для того, чтобы узнать какие препараты были выписаны тому или иному пациенту*/
 create view Reciept_Medicaments_view as
 select recept_numb, med_name, purpose, instruction, Recept.Dosage, trat_duration, prescription_date
 from Recept inner join Medicaments on Recept.cod_med = Medicaments.cod_med
@@ -1292,8 +1306,8 @@ go
 
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ î ďŕöčĺíňŕő č čő çŕáîëĺâŕíč˙ő--
-/*Äŕííîĺ ďđĺäńňŕâëĺíčĺ ďîëĺçíî, ĺńëč íĺîáőîäčěî óçíŕňü ÷ĺě áîëĺë ňîň čëč číîé ďŕöčĺíň, ŕ ňŕęćĺ äë˙ ńňŕňčńňčęč*/
+--Создадим представление о пациентах и их заболеваниях--
+/*Данное представление полезно, если необходимо узнать чем болел тот или иной пациент, а также для статистики*/
 create view TPatient_Referral_view as
 select Patient_Fam_doctor_view.cod_pac, fio_pac, age, gender, Birth_date, pac_adres, fio_doct, Stamp, pac_tel, Number_insurance_police, Work, IDNP, cod_diagnoz
 from Patient_Fam_doctor_view inner join Referral on Patient_Fam_doctor_view.cod_pac = Referral.cod_pac
@@ -1318,8 +1332,9 @@ go
 
 
 
---Ńîçäŕäčě ďđĺäńňŕâëĺíčĺ î âńĺő đĺöĺďňŕő âűďčńŕííűő ďŕöčĺíňŕě--
-/*Äŕííîĺ ďđĺäńňŕâëĺíčĺ íŕě íĺîáőîäčěî ďî ňîé ďđč÷číĺ, ÷ňî äîńňŕňî÷íî ÷ŕńňî íĺîáőîäčěî óçíŕňü, ęŕęčĺ ďđĺďŕđŕňű č â ęŕęîé äîçčçîâęĺ áűëč âűďčńŕíű ňîěó čëč číîěó ďŕöčĺíňó*/
+
+--Создадим представление о всех рецептах выписанных пациентам--
+/*Данное представление нам необходимо по той причине, что достаточно часто необходимо узнать, какие препараты и в какой дозизовке были выписаны тому или иному пациенту*/
 
 create view Reciept_Patient_view as
 select recept_numb, fio_pac, age, gender, Birth_date, pac_adres, fio_doct, pac_tel, Number_insurance_police, Work, IDNP, name_diagnoz, cod_med, Dosage, trat_duration, prescription_date, cod_MI, cod_spec
@@ -1371,7 +1386,66 @@ go
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--создадим представление для пациента и его диагноза--
+select *
+from Patient_Referral_view
+go
+
+
+create view Patient_Diagnoz_view as
+select fio_pac, age, gender, Birth_date, pac_adres, pac_tel, Number_insurance_police, Work, IDNP, name_diagnoz
+from Patient_Referral_view inner join Diagnoza on Patient_Referral_view.cod_diagnoz = Diagnoza.cod_diagnoz
+go
+
+
+select *
+from Patient_Diagnoz_view
+go
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --class work 14.9.22      Working with variables--
+
+/*
+
 
 declare @Carea varchar(70)
 
@@ -1383,12 +1457,10 @@ where area = @Carea
 Go
 
 
+*/
 
 
 
-
-
---move areas from Family doctor to a new table!!!!!--
 
 
 
@@ -1414,6 +1486,7 @@ from Family_doctor
 go
 
 
+/*
 
 
 
@@ -1450,3 +1523,5 @@ select area
 from Family_doctor
 where fio_doct = @Cfiodoct
 go	
+
+*/
