@@ -1835,3 +1835,24 @@ to administrator_r
 go
 
 
+
+
+
+
+
+
+create procedure dbo.add_new_Area(@IIdArea Int, @CAreaName Varchar(70)) as
+
+insert into Area_doctor
+values (@IIdArea, @CAreaName)
+
+go
+
+
+
+exec dbo.add_new_Area 100, 'Sarmesedjetusa'
+go
+
+select *
+from Area_doctor
+go
